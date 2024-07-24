@@ -11,6 +11,7 @@ You can pass up to 2 argument which has to be intergers:
 ***
 Example:
 "./Game_of_Life.exe 5 13" creates board 5x13
+***
 
 End conditions are:
 1) All cells extinction.
