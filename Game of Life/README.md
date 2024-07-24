@@ -2,7 +2,11 @@ Conway's Game of Life
 C# implementation
 
 
-Program is executable via bin/Debug/net8.0/Game_of_Life.exe file.
+Program is executable via bin/Debug/net8.0/Game_of_Life.exe file. Therefore it will launch with default board size (10x15).
+If you want to adjust it's size you have to run "./Game_of_Life.exe" command in terminal being in "net8.0" folder.
+You can pass up to 2 argument which has to be intergers:
+- first entered number is board's width
+- second one is board's height
 
 End conditions are:
 1) All cells extinction.
