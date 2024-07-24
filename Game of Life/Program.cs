@@ -6,23 +6,35 @@ namespace GameOfLife
     {
         private int boardWidth;
         private int boardHeight;
-        private bool[,] board;
 
-        public GameOfLife(int width, int height)
+        int iterationCounter;
+
+        private bool[,] board;
+        private bool[,] previousBoard;
+        private bool[,] prePreviousBoard;
+
+
+        public GameOfLife(int width = 10, int height = 15)
         {
             boardWidth = width;
             boardHeight = height;
             board = new bool[boardWidth, boardHeight];
+            previousBoard = new bool[boardWidth, boardHeight];
+            prePreviousBoard = new bool[boardWidth, boardHeight];
         }
 
         public void Initialize()
         {
+            iterationCounter = 0;
+
             Random rand = new();
             for(int x = 0; x < boardWidth; x++)
             {
                 for(int y = 0; y < boardHeight; y++)
                 {
                     board[x, y] = (rand.Next(0, 2) == 0);
+                    previousBoard[x, y] = false;
+                    prePreviousBoard[x, y] = false;
                 }
             }
         }
@@ -46,7 +58,7 @@ namespace GameOfLife
             return x >= 0 && x < boardWidth && y >= 0 && y < boardHeight;
         }
 
-        public int CountLiveNeighbors(int x, int y)
+        private int CountLiveNeighbors(int x, int y)
         {
             int count = 0;
             for(int i  = -1; i <= 1; i++)
@@ -72,6 +84,15 @@ namespace GameOfLife
 
         public void Update()
         {
+            if(iterationCounter > 0)
+            {
+                prePreviousBoard = previousBoard;
+            }
+
+            previousBoard = board;
+
+            iterationCounter++;
+
             bool[,] newBoard = new bool[boardWidth, boardHeight];
 
             for(int x = 0; x < boardWidth; x++)
@@ -122,47 +143,34 @@ namespace GameOfLife
 
         public bool IsStateStable()
         {
-            bool[,] newBoard = new bool[boardWidth, boardHeight];
-
-            for(int x = 0; x < boardWidth; x++)
+            for (int x = 0; x < boardWidth; x++)
             {
-                for(int y = 0; y < boardHeight; y++)
+                for (int y = 0; y < boardHeight; y++)
                 {
-                    int liveNeighbors = CountLiveNeighbors(x, y);
-                    if(board[x, y])
+                    if (previousBoard[x, y] != board[x, y])
                     {
-                        if(liveNeighbors < 2 || liveNeighbors > 3)
-                        {
-                            newBoard[x, y] = false;
-                        }
-                        else
-                        {
-                            newBoard[x, y] = true;
-                        
-                        }
-                    }
-                    else
-                    {
-                        if(liveNeighbors == 3)
-                        {
-                            newBoard[x, y] = true;
-                        }
+                        return false; // Found a difference
                     }
                 }
             }
 
-            for(int x = 0; x < boardWidth; x++)
+            return true; // No differences found, state is stable
+        }
+
+        public bool IsInLoop()
+        {
+            for (int x = 0; x < boardWidth; x++)
             {
-                for(int y = 0; y < boardHeight; y++)
+                for (int y = 0; y < boardHeight; y++)
                 {
-                    if(board[x, y] != newBoard[x, y])
+                    if (prePreviousBoard[x, y] != board[x, y])
                     {
-                        return false;
+                        return false; // Found a difference
                     }
                 }
             }
 
-            return true;
+            return true; // No differences found, state is stable
         }
     }
 
@@ -170,23 +178,63 @@ namespace GameOfLife
     {
         static void Main(string[] args)
         {
-            GameOfLife game = new GameOfLife(10, 15);
-            game.Initialize();
 
-            while((!game.AllAreDead()) && (!game.IsStateStable()))
-            {
-                game.Update();
-                game.DisplayBoard();
-                Thread.Sleep(500);
-            }
+            bool widthConverted = false;
+            bool heightConverted = false;
 
-            if(game.AllAreDead())
+            try
             {
-                Console.WriteLine("All cells are extinct.");
+                if(args.Length > 2)
+                {
+                    throw new ArgumentException("Please provide the width and height of the board.");
+                }
+
+                int width = 10;
+                int height = 15;
+                if(args.Length > 0)
+                {
+                    widthConverted = int.TryParse(args[0], out width);
+                    if(!widthConverted)
+                        throw new ArgumentException("Please provide valid width and height values.");
+                }
+                    
+                
+                if(args.Length > 1)
+                {
+                    heightConverted = int.TryParse(args[1], out height);
+                    if(!heightConverted)
+                        throw new ArgumentException("Please provide valid width and height values.");
+                }
+
+                
+                GameOfLife game = new GameOfLife(width, height);
+                game.Initialize();
+
+                while((!game.AllAreDead()) && (!game.IsStateStable()) && (!game.IsInLoop()))
+                {
+                    game.Update();
+                    game.DisplayBoard();
+                    Thread.Sleep(500);
+                }
+
+                if(game.AllAreDead())
+                {
+                    Console.WriteLine("All cells are extinct.");
+                }
+                else if(game.IsStateStable())
+                {
+                    Console.WriteLine("The state of all cells is stable.");
+                }
+                else if(game.IsInLoop())
+                {
+                    Console.WriteLine("The state of all cells is in a loop.");
+                }
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadKey();
             }
-            else if(game.IsStateStable())
+            catch(ArgumentException ex)
             {
-                Console.WriteLine("The state of all cells is stable.");
+                Console.WriteLine(ex.Message);
             }
         }
     }
