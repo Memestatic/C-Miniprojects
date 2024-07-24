@@ -8,6 +8,10 @@ You can pass up to 2 argument which has to be intergers:
 - first entered number is board's width
 - second one is board's height
 
+***
+Example:
+"./Game_of_Life.exe 5 13" creates board 5x13
+
 End conditions are:
 1) All cells extinction.
 2) Stable state where nothing changes between iterations.
